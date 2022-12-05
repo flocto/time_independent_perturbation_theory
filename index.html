@@ -42,6 +42,7 @@
             href="https://en.wikipedia.org/wiki/Time-independent_perturbation_theory">Wikipedia article</a> on time
         independent perturbation theory.</p>
 
+    <h3>Note: If the Sage cells seem to be hanging, just refresh the page.</h3>
     <div id="setup">
         <script type="text/x-sage">
 var("x t")
@@ -139,12 +140,17 @@ colors = gen_colors()
 
     <p>You can also toggle the boolean <code>second_order</code> from False to True. This results in a more accurate
         perturbation, but takes much longer to compute.</p>
+
+    <p>Same goes for the boolean <code>display_correction</code>. This option has no impact on performance.</p>
     <div id="input">
         <script type="text/x-sage">
-H_prime = 0
-show(H_prime)
+H_prime = x
 second_order = False
-show(second_order)
+display_correction = True
+
+show(H_prime)
+show("Calculating second order correction: ", second_order)
+show("Displaying corrections: ", display_correction)
         </script>
     </div>
 
@@ -158,9 +164,12 @@ show(second_order)
 plots = []
 
 unperturbed_wave_function = psi(1)
-perturbed_wave_function = psi(1) + first_order_correction(1)
+foc = first_order_correction(1)
+soc = 0
+perturbed_wave_function = psi(1) + foc
 if second_order:
-    perturbed_wave_function += second_order_correction(1)
+    soc = second_order_correction(1)
+    perturbed_wave_function += soc
 
 for step in range(0, 12):
     plots.append(plot(unperturbed_wave_function, (0, a), ymin=YMIN, ymax=YMAX, color="red"))
@@ -177,6 +186,10 @@ anim = animate(plots)
 anim.gif(savefile="wave.gif",delay=8)
 show("Animation rendered.")
 anim.show(delay=8)
+if display_correction:
+    show("First order correction: ", foc)
+    if second_order:
+        show("Second order correction: ", soc)
             </script>
     </div>
 </body>
