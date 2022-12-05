@@ -1,0 +1,20 @@
+body {
+    font-family: Söhne, ui-sans-serif, system-ui, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    color: rgb(217, 217, 217);
+    background-color: #202123;
+}
+h1, h2, h3, h4, h5, h6 {
+    color: rgb(217, 217, 217);
+}
+a {
+    color: #00bfff;
+}
+a:visited {
+    color: #bfbfff;
+}
+.sagecell_output {
+    background-color: rgba(0, 0, 0, 0.75);
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+}

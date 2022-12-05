@@ -1,0 +1,184 @@
+<!DOCTYPE HTML>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width">
+    <link rel="shortcut icon" type="image/png" href="https://avatars.githubusercontent.com/u/57694588?s=40&v=4">
+    <link rel="stylesheet" href="index.css">
+    <title>Quantum Simulation</title>
+    <script src="https://sagecell.sagemath.org/static/embedded_sagecell.js"></script>
+    <script>
+        sagecell.makeSagecell({
+            inputLocation: '#setup',
+            autoeval: true,
+            linked: true,
+            linkKey: "quantum-simulation",
+            hide: ['editor', 'evalButton', 'permalink', 'link', 'files', 'help', 'language', 'output', 'status', 'time', 'version'],
+        });
+        sagecell.makeSagecell({
+            inputLocation: '#input',
+            evalButtonText: 'Set Perturbation',
+            linked: true,
+            linkKey: "quantum-simulation",
+            hide: ['language', 'status', 'time', 'version'],
+        });
+        sagecell.makeSagecell({
+            inputLocation: '#animate',
+            evalButtonText: 'Animate Perturbation',
+            linked: true,
+            linkKey: "quantum-simulation",
+            hide: ['editor', 'language', 'status', 'time', 'version'],
+        });
+    </script>
+</head>
+
+<body>
+    <h1>Time Independent Non-degenerate Perturbation Theory</h1>
+    <p>This site explores the time independent non-degenerate perturbation theory in quantum mechanics. More
+        specifically, it animates the effects of a perturbation on the ground state
+        wavefunction of an infinite square well.</p>
+    <p>For more information, see the <a
+            href="https://en.wikipedia.org/wiki/Time-independent_perturbation_theory">Wikipedia article</a> on time
+        independent perturbation theory.</p>
+
+    <div id="setup">
+        <script type="text/x-sage">
+var("x t")
+# var("hbar", latex_name=r"\hbar")
+# assume(hbar > 0)
+# assume(hbar, "constant")
+a = 1
+
+YMIN = -2.5
+YMAX = 2.5
+H_prime = 0
+STEPS = 12
+
+def energy(n):
+#     return n^2 * pi^2 * hbar^2 / (2 * a^2)
+    return n^2 * pi^2 / (2 * a^2)
+
+def psi(n):
+    return sqrt(2/a) * sin(n * pi * x / a)
+
+def first_order_correction(n):
+    En = energy(n)
+    psi_n = psi(n)
+    correction = 0
+
+    for m in range(1, 6):
+        if m != n:
+            Em = energy(m)
+            psi_m = psi(m)
+            integral = integrate(psi_m * H_prime * psi_n, (x, 0, a))
+            correction += psi_m * integral / (En - Em)
+
+    return correction
+
+def second_order_correction(n):
+    En = energy(n)
+    psi_n = psi(n)
+    correction = 0
+    integral1s = {}
+    integral2s = {}
+    integral3s = {}
+    innernHn = integrate(psi_n * H_prime * psi_n, (x, 0, a)) # <psi_n | H' | psi_n>
+    
+
+    for i in range(1, 6):
+        if i != n:
+            Ei = energy(i)
+            psi_i = psi(i)
+
+            for j in range(1, 6):
+                if j != n:
+                    Ej = energy(j)
+                    psi_j = psi(j)
+                    
+                    if (i, j) not in integral1s and (j, i) not in integral1s:
+                        integral1 = integrate(psi_i * H_prime * psi_j, (x, 0, a))
+                        integral1s[(i, j)] = integral1
+                        integral1s[(j, i)] = integral1
+                    
+                    if j not in integral2s:
+                        integral2 = integrate(psi_j * H_prime * psi_n, (x, 0, a))
+                        integral2s[j] = integral2
+
+                    if i not in integral3s:
+                        integral3 = integrate(psi_i * H_prime * psi_n, (x, 0, a))
+                        integral3s[i] = integral3
+
+                    correction += psi_i * ((integral1s[(i, j)] * integral2s[j] / ((En - Ei) * (En - Ej))) - (innernHn * integral3s[i] / ((En - Ei) ^ 2)))
+
+    return correction
+
+def gen_colors():
+    steps = STEPS
+    start = Color("red")
+    end = Color("blue")
+    
+    colors = []
+    for i in range(1, STEPS+1):
+        color = start.blend(end, fraction=i/(STEPS+1))
+        colors.append(color)
+    
+    return colors
+
+colors = gen_colors()
+ </script>
+    </div>
+
+    <h2>Apply your own perturbation</h2>
+    <p>Type your own perturbation in the box below, with the format <code>H_prime = f(x)</code>, where <code>f(x)</code>
+        is a function in terms of <code>x</code>.</p>
+
+    <p>For example, <code>H_prime = x^2</code> will apply a perturbation of
+        <code>x^2</code> to the infinite square well.
+    </p>
+
+    <p>You can also toggle the boolean <code>second_order</code> from False to True. This results in a more accurate
+        perturbation, but takes much longer to compute.</p>
+    <div id="input">
+        <script type="text/x-sage">
+H_prime = 0
+show(H_prime)
+second_order = False
+show(second_order)
+        </script>
+    </div>
+
+    <h2>Render Animation</h2>
+    <p>After you have typed your perturbation, click the button below to render the animation. The calculation may take
+        a while to complete, depending on the complexity of the perturbation.</p>
+    <p>After the animation is rendered, you can download a copy by clicking the <code>wave.gif</code> link below the
+        animation.</p>
+    <div id="animate">
+        <script type="text/x-sage">
+plots = []
+
+unperturbed_wave_function = psi(1)
+perturbed_wave_function = psi(1) + first_order_correction(1)
+if second_order:
+    perturbed_wave_function += second_order_correction(1)
+
+for step in range(0, 12):
+    plots.append(plot(unperturbed_wave_function, (0, a), ymin=YMIN, ymax=YMAX, color="red"))
+
+for step in range(12, 24):
+    transition = sin(pi * (step - 12) / 24)
+    wave_function_transition = (1 - transition) * unperturbed_wave_function + transition * perturbed_wave_function
+    plots.append(plot(wave_function_transition, (0, a), ymin=YMIN, ymax=YMAX, color=colors[step - 12]))
+
+for step in range(24, 36):
+    plots.append(plot(perturbed_wave_function, (0, a), ymin=YMIN, ymax=YMAX, color="blue"))
+
+anim = animate(plots)
+anim.gif(savefile="wave.gif",delay=8)
+show("Animation rendered.")
+anim.show(delay=8)
+            </script>
+    </div>
+</body>
+
+</html>
